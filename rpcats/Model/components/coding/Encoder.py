@@ -12,7 +12,6 @@ class Encoder(nn.Module):
 
         Args : 
             in_channels : Input channel
-            out_channel : output channel
             conv_kernel_size : Kernel size of the convolution
             pool_kernel_size : Kernel size of max pooling
         """

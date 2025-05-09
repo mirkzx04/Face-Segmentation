@@ -4,7 +4,7 @@ import torch.nn as nn
 from Model.components.DoubleConv import DoubleConv
 
 class Decoder(nn.Module):
-    def __init__(self, in_channles, out_channels, conv_kernel_size, convT_kernel_size):
+    def __init__(self, in_channles, conv_kernel_size, convT_kernel_size):
         super().__init__()
 
         """
@@ -25,7 +25,7 @@ class Decoder(nn.Module):
             stride=2)
         
         # Defines a DoubleConv class, it does che conv + batch norm + relu two times
-        self.double_conv = DoubleConv(in_channles, out_channels, conv_kernel_size)
+        self.double_conv = DoubleConv(in_channles, in_channles // 2, conv_kernel_size)
 
     def forward(self, input_tensor, skip_conn):
         """

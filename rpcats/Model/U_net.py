@@ -60,17 +60,11 @@ class UNet(nn.Module):
             last_enc_channels
         ):
 
-        print(f'-- Debug initialize_dec_layers ---')
-
+        # Set in_channels
         in_channels = last_enc_channels * 2
         dec_layers = []
 
-        print(f'- In channels : {in_channels}')
-
         for l in range(layer_num):
-
-            print(f'- In channels : {in_channels}  \n - Out Channels : {in_channels // 2}')
-            
             dec_layer = Decoder(
                 in_channles=in_channels,
                 conv_kernel_size=conv_kernel_size,
@@ -79,6 +73,7 @@ class UNet(nn.Module):
 
             dec_layers.append(dec_layer)  
 
+            # Update in_channels for next layer
             in_channels //= 2
         
         return dec_layers
@@ -90,20 +85,12 @@ class UNet(nn.Module):
             conv_kernel_size, 
             pool_kernel_size
         ):
-        
-        print(f'-- Debug initialize_enc_layers ---')
 
+        # Set out channels
         out_channels = 64
         enc_layers = []
 
-        print(f'- In channels : {in_channels}')
-
-
-        for l in range(layer_num):
-            
-            print(f'- in channels : {in_channels}  \n - Out Channels : {out_channels}')
-
-            
+        for l in range(layer_num):            
             enc_layer_conv = Encoder(
                 in_channels = in_channels,
                 out_channels=out_channels,
@@ -114,24 +101,37 @@ class UNet(nn.Module):
             enc_layers.append(enc_layer_conv)
 
             in_channels = out_channels
+
+            # Update out_channels for next layer
             out_channels *= 2
 
         return enc_layers, out_channels // 2
     
     def forward(self, X):
-        enc_out = []
+        """
+        This method defines the forward pass
+        """
+        skip_conn = []
 
+        # Execute all encoder layers, get a conv output (enc_cov) and pool 
+        # output (pool)
         for encoder in self.enc_layers:
-            pool, enc_out = encoder(X)
-            X = pool
+            X, skip = encoder(X)
 
-            enc_out.append(enc_out)
-
+            skip_conn.append(skip)
+        
+        # Get bottle neck output
         bottle_neck = self.bottle_neck(X)
 
         X = bottle_neck
+        skip_conn = skip_conn[::-1]
 
-        for decoder in self.dec_layers:
-            dec_out = decoder(X)
+        # Execute all decoder layer
+        for idx, decoder in enumerate(self.dec_layers):
+            X = decoder(X, skip_conn[idx])
+        
+        output = self.out(X)
+
+        return output
 
 

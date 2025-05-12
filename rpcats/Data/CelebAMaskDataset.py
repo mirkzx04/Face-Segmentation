@@ -64,7 +64,7 @@ class CelebAMaskDataset(Dataset):
         else:  # test
             self.indices = indices[int(0.9 * total_images):]
         
-        self.image_files = [self.image_files[idx] for idx in self.indices]
+        self.image_files = [self.img_files[idx] for idx in self.indices]
         print(f'Loaded {len(self.image_files)} images for {split} split')
 
     def __len__(self):
@@ -82,7 +82,7 @@ class CelebAMaskDataset(Dataset):
         # Read img
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image(self.img_size, self.img_size))
+        image = cv2.resize(image, (self.img_size, self.img_size))
 
         # Create binary mask of the face
         binary_mask = self.create_mask(img_id)
@@ -99,14 +99,16 @@ class CelebAMaskDataset(Dataset):
         """
 
         binary_mask = np.zeros((self.img_size, self.img_size), dtype=np.uint8)
+        img_id_int = int(img_id)
 
         # Get mask id from file with dataset format
-        mask_folder = os.path.join(self.masks_path, str(int(img_id) // 2))
+        folder_idx = img_id_int // 2000
+        mask_folder = os.path.join(self.masks_path, str(folder_idx))
+        file_id = f'{img_id_int:05d}'
 
         # Unites all mask in to one part : The face
-
         for part in self.face_parts:
-            mask_path = os.path.join(mask_folder, f'{img_id}_{part}.png')
+            mask_path = os.path.join(mask_folder, f'{file_id}_{part}.png')
 
             if os.path.exists(mask_path):
                 # Read mask of the parts of the face
@@ -114,8 +116,7 @@ class CelebAMaskDataset(Dataset):
                 part_mask = cv2.resize(part_mask, (self.img_size, self.img_size))
 
                 # Unites all binary mask (All pixels are > 0 are face)
-                np.logical_or(binary_mask, part_mask > 0).astype(np.uint8)
+                binary_mask = np.logical_or(binary_mask, part_mask > 0).astype(np.uint8)
         
         # Normalize in 0-1
-        binary_mask = binary_mask * 255
-        return binary_mask
+        return binary_mask * 255

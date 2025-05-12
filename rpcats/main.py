@@ -121,6 +121,7 @@ if __name__ == "__main__":
     scheduler_params = {'factor' : 0.3, 'patience' : 5, 'min_lr' : 1e-7}
     weight_decay = 1e-5
     batch_size = 4
+    accumulation_steps = 4
 
     dataset_root = 'rpcats/Data/Dataset/CelebAMask-HQ'
 
@@ -200,8 +201,6 @@ if __name__ == "__main__":
         f1_score.reset()
 
         for idx, batch in enumerate(tqdm(train_loader)):
-            optim.zero_grad()
-
             # Extract data of batch (images as input and masks as target)
             # masks shape : [batch_size, channel, height, width] height, width = 512, channels = 1
             images = batch['image'].to(device)
@@ -216,8 +215,11 @@ if __name__ == "__main__":
 
             # Compute loss and its gradient compute F1, Dice Scores
             loss = criterion(logits_out, masks_without_channels)
+            loss /= accumulation_steps
             loss.backward()
-            optim.step()
+            if (idx + 1) % accumulation_steps == 0 or (idx + 1) == len(train_loader):
+                optim.step()
+                optim.zero_grad()
 
             train_loss += loss.item()
 
@@ -275,7 +277,6 @@ if __name__ == "__main__":
             'TRAIN -> gradient params' : trainable_params_norm,
             'TRAIN -> F1 Score' : f1,
             'TRAIN -> Dice Score' : dice,
-
 
             # Log of model params
             'MODEL -> trainable params' : trainable_params,

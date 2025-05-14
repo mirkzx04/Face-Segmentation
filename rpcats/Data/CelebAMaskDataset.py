@@ -50,7 +50,7 @@ class CelebAMaskDataset(Dataset):
         )))
 
         # Get total imgs number
-        total_images = len(self.img_files)
+        total_images = len(self.img_files) - 15000
 
         # Create train, val and test split based on seed for reproducibility
         random.seed(42)

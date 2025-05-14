@@ -62,7 +62,7 @@ class UNet(nn.Module):
 
         # Set in_channels
         in_channels = last_enc_channels * 2
-        dec_layers = []
+        dec_layers = nn.ModuleList()
 
         for l in range(layer_num):
             dec_layer = Decoder(
@@ -88,7 +88,7 @@ class UNet(nn.Module):
 
         # Set out channels
         out_channels = 64
-        enc_layers = []
+        enc_layers = nn.ModuleList()
 
         for l in range(layer_num):            
             enc_layer_conv = Encoder(
@@ -133,5 +133,3 @@ class UNet(nn.Module):
         output = self.out(X)
 
         return output
-
-

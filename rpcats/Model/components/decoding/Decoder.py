@@ -12,7 +12,6 @@ class Decoder(nn.Module):
 
         Args : 
             in_channles : Iput channel
-            out_channels : Output channel
             conv_kernel_size : kernel size of the convolution 
             convT_kernel_size : Kernel size of the Convolution Transpose
         """
@@ -24,6 +23,7 @@ class Decoder(nn.Module):
             kernel_size=convT_kernel_size,
             stride=2)
         
+        self.batch_norm = nn.BatchNorm2d(in_channles//2)
         # Defines a DoubleConv class, it does che conv + batch norm + relu two times
         self.double_conv = DoubleConv(in_channles, in_channles // 2, conv_kernel_size)
 
@@ -36,9 +36,11 @@ class Decoder(nn.Module):
             skip_conn : Output from the encoder layer parallel to this 
         """
 
+        # Execute the transpose operation and normalize it
         up = self.transpose_conv(input_tensor)
+        up = self.batch_norm(up)
         
         # up form : [batch_size, C, height, widtg] and skip_conn form : [batch_size, C', height, width] with torch.cat we
         #concat 2 tensor on axis = 1 getting one tensor with form [batch_size, C * C', height, widtg]
-        return self.double_conv(torch.cat(([up, skip_conn]), 1))
+        return self.double_conv(torch.cat([up, skip_conn], 1))
     

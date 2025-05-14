@@ -10,7 +10,6 @@ class DoubleConv(nn.Module):
 
         Args:
             in_channels : Input channles
-            out_channels : Output channles
 
             (channels indicates the image channels )
             kernel_size : Size of filter that we applicate to input
